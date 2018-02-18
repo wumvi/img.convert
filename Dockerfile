@@ -4,6 +4,8 @@ MAINTAINER Vitaliy Kozlenko <vk@wumvi.com>
 ENV GOROOT="/usr/local/go"
 ENV PATH="$GOPATH/bin:$GOROOT/bin:$PATH"
 
+ADD cmd/  /
+
 RUN DEBIAN_FRONTEND=noninteractive && \
 	apt-get -qq update && \
 	apt-get --no-install-recommends -qq -y install gnupg sox wget curl lsb-release imagemagick cmake ca-certificates libjpeg-dev libpng-dev libtiff-dev libgif-dev git autoconf automake libtool  m4 nasm pkg-config build-essential unzip zip && \
@@ -37,6 +39,8 @@ RUN DEBIAN_FRONTEND=noninteractive && \
 	# ln -s /root/go/bin/primitive /usr/local/bin/primitive && \
 	mv /root/go/bin/primitive /usr/sbin/ && \
 	npm install -g sqip && \
+	#
+	chmod +x /*.sh && \
 	#
 	apt-get remove -y wget lsb-release cmake libjpeg-dev libpng-dev unzip libtiff-dev libgif-dev autoconf automake libtool m4 nasm pkg-config build-essential && \
 	apt-get -y autoremove && \
