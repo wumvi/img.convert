@@ -54,3 +54,5 @@ RUN DEBIAN_FRONTEND=noninteractive && \
 	echo 'done'
 
 WORKDIR /data/
+
+CMD [ "/start.sh"]
