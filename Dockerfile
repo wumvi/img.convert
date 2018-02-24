@@ -1,17 +1,18 @@
-FROM debian:stretch-slim
+FROM wumvi/php.base
 MAINTAINER Vitaliy Kozlenko <vk@wumvi.com>
 
 ENV GOROOT="/usr/local/go"
 ENV PATH="$GOPATH/bin:$GOROOT/bin:$PATH"
 
 ADD cmd/  /
+ADD cnv/  /cnv/
 
 RUN DEBIAN_FRONTEND=noninteractive && \
 	apt-get -qq update && \
 	apt-get --no-install-recommends -qq -y install gnupg sox wget curl lsb-release imagemagick cmake ca-certificates libjpeg-dev libpng-dev libtiff-dev libgif-dev git autoconf automake libtool  m4 nasm pkg-config build-essential unzip zip && \
 	curl -sL https://deb.nodesource.com/setup_9.x | bash - && \
     apt-get --no-install-recommends -qq -y install nodejs && \
-	mkdir /soft/ && \ 
+	mkdir -p /soft/ && \
 	# WebP File
 	cd /soft/ && \
 	wget https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-0.6.0.tar.gz -O libwebp.tar.gz && \
@@ -39,6 +40,9 @@ RUN DEBIAN_FRONTEND=noninteractive && \
 	# ln -s /root/go/bin/primitive /usr/local/bin/primitive && \
 	mv /root/go/bin/primitive /usr/sbin/ && \
 	npm install -g sqip && \
+	#
+	cd /cnv/ && \
+	composer install --no-interaction --no-dev --no-progress --no-suggest --optimize-autoloader --prefer-dist --ignore-platform-reqs --no-plugins && \
 	#
 	chmod +x /*.sh && \
 	#

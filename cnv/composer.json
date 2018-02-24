@@ -1,0 +1,20 @@
+{
+  "name": "wumvi/convert",
+  "description": "English project",
+  "require": {
+    "php": "~7.1",
+    "ulrichsg/getopt-php": "3.0.3",
+    "symfony/filesystem": "4.0.4"
+  },
+  "require-dev": {
+  },
+  "autoload": {
+    "psr-4": {
+      "Cli\\": "src"
+    }
+  },
+  "authors": [{
+      "name": "Kozlenko Vitaliy",
+      "role": "Developer"
+    }]
+}
