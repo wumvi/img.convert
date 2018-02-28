@@ -49,6 +49,9 @@ $getOpt->addOption($option);
 $option = new Option('y', 'test-only', GetOpt::NO_ARGUMENT);
 $option->setDescription('Test only');
 $getOpt->addOption($option);
+$option = new Option('r', 'rnd', GetOpt::REQUIRED_ARGUMENT);
+$option->setDescription('Rundom number');
+$getOpt->addOption($option);
 
 try {
     $getOpt->process();
@@ -79,6 +82,13 @@ if (!$infoData) {
     throw new \Exception('Info data not found. Use --info');
 }
 
+$rnd = $getOpt->getOption('rnd');
+if (!$rnd) {
+    throw new \Exception('Rnd not found. Use --rnd');
+}
+
+$filesystem = new Filesystem();
+
 $sizes = $getOpt->getOption('size');
 if ($sizes) {
     $sizes = array_map(function ($size) {
@@ -86,7 +96,6 @@ if ($sizes) {
     }, $sizes);
 }
 
-$rnd = 1;//mt_rand(0, 100);
 $tmpDir = '/tmp/web/convert/' . $rnd . '/';
 $zipFile = '/tmp/web/convert/' . $rnd . '.zip';
 
@@ -99,46 +108,55 @@ if (!is_dir($tmpDir)) {
     mkdir($tmpDir, 0777, true);
 }
 
-$pngTpl = $name . '-%s.png';
+$dpiMax = 3;
+
+$pngTpl = $name . '-%s-%s.png';
 foreach ($sizes as $size) {
-    $pngName = sprintf($pngTpl, $size);
-    $cmd = sprintf('/png.sh %s %s %s > /dev/stdout', $infile, $size, $tmpDir . $pngName);
-    if ($isVerbose) {
-        echo 'Cmd: ' . $cmd, PHP_EOL;
-    }
-    if (!$testOnly) {
-        exec($cmd);
+    for ($dpi = 1; $dpi <= $dpiMax; $dpi++) {
+        $pngName = sprintf($pngTpl, $size, $dpi);
+        $dpiSize = round($size * $dpi / $dpiMax);
+        $cmd = sprintf('/png.sh %s %s %s > /dev/stdout', $infile, $dpiSize, $tmpDir . $pngName);
+        if ($isVerbose) {
+            echo 'Cmd: ' . $cmd, PHP_EOL;
+        }
+        if (!$testOnly) {
+            exec($cmd);
+        }
     }
 }
 
-$webpTpl = $name . '-%s.webp';
+$webpTpl = $name . '-%s-%s.webp';
 $isWebp = (bool)$getOpt->getOption('webp');
 if ($isWebp) {
     foreach ($sizes as $size) {
-        $pngFile = $tmpDir . sprintf($pngTpl, $size);
-        $webpFile = $tmpDir . sprintf($webpTpl, $size);
-        $cmd = sprintf('/webp.sh %s %s > /dev/stdout', $pngFile, $webpFile);
-        if ($isVerbose) {
-            echo 'Cmd: ' . $cmd, PHP_EOL;
-        }
-        if (!$testOnly) {
-            exec($cmd);
+        for ($dpi = 1; $dpi <= $dpiMax; $dpi++) {
+            $pngFile = $tmpDir . sprintf($pngTpl, $size, $dpi);
+            $webpFile = $tmpDir . sprintf($webpTpl, $size, $dpi);
+            $cmd = sprintf('/webp.sh %s %s > /dev/stdout', $pngFile, $webpFile);
+            if ($isVerbose) {
+                echo 'Cmd: ' . $cmd, PHP_EOL;
+            }
+            if (!$testOnly) {
+                exec($cmd);
+            }
         }
     }
 }
 
-$jpgTpl = $name . '-%s.jpg';
+$jpgTpl = $name . '-%s-%s.jpg';
 $isJpg = (bool)$getOpt->getOption('jpg');
 if ($isJpg) {
     foreach ($sizes as $size) {
-        $pngFile = $tmpDir . sprintf($pngTpl, $size);
-        $jpgFile = $tmpDir . sprintf($jpgTpl, $size);
-        $cmd = sprintf('/jpg.sh %s %s > /dev/stdout', $pngFile, $jpgFile);
-        if ($isVerbose) {
-            echo 'Cmd: ' . $cmd, PHP_EOL;
-        }
-        if (!$testOnly) {
-            exec($cmd);
+        for ($dpi = 1; $dpi <= $dpiMax; $dpi++) {
+            $pngFile = $tmpDir . sprintf($pngTpl, $size, $dpi);
+            $jpgFile = $tmpDir . sprintf($jpgTpl, $size, $dpi);
+            $cmd = sprintf('/jpg.sh %s %s > /dev/stdout', $pngFile, $jpgFile);
+            if ($isVerbose) {
+                echo 'Cmd: ' . $cmd, PHP_EOL;
+            }
+            if (!$testOnly) {
+                exec($cmd);
+            }
         }
     }
 }
@@ -152,7 +170,6 @@ if ($isSvg) {
     }
     if (!$testOnly) {
         exec($cmd);
-        $filesystem = new Filesystem();
         $filesystem->remove('/tmp/primitive_tempfile.svg');
     }
 }
@@ -161,16 +178,16 @@ if ($infoData) {
     $infoFile = $tmpDir . 'info.json';
     if ($isVerbose) {
         echo 'Info file: ' . $infoFile, PHP_EOL;
-        echo 'Info data: ' . $infoData, PHP_EOL;
+        echo 'Info data: ' . base64_decode($infoData), PHP_EOL;
     }
     if (!$testOnly) {
-        file_put_contents($infoFile, $infoData);
+        file_put_contents($infoFile, base64_decode($infoData));
     }
 }
 
 $isPng = (bool)$getOpt->getOption('png');
 if (!$isPng) {
-    $cmd = 'rm -rf ' . $tmpDir . '* > /dev/stdout';
+    $cmd = 'rm -rf ' . $tmpDir . '*.png > /dev/stdout';
     if ($isVerbose) {
         echo 'Cmd: ' . $cmd, PHP_EOL;
     }
@@ -186,6 +203,7 @@ if ($isZip) {
         echo 'Cmd: ' . $cmd, PHP_EOL;
     }
     if (!$testOnly) {
+        $filesystem->remove($zipFile);
         exec($cmd);
     }
 }
