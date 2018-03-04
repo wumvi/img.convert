@@ -114,7 +114,7 @@ $pngTpl = $name . '-%s-%s.png';
 foreach ($sizes as $size) {
     for ($dpi = 1; $dpi <= $dpiMax; $dpi++) {
         $pngName = sprintf($pngTpl, $size, $dpi);
-        $dpiSize = round($size * $dpi / $dpiMax);
+        $dpiSize = $size * $dpi;
         $cmd = sprintf('/png.sh %s %s %s > /dev/stdout', $infile, $dpiSize, $tmpDir . $pngName);
         if ($isVerbose) {
             echo 'Cmd: ' . $cmd, PHP_EOL;
